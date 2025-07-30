@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>MapLibre ES6 Marker with Floating Card</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <script
+      src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"
+      defer
+    ></script>
+    <style>
+      body,
+      html,
+      #map {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      .marker-wrapper {
+        position: absolute;
+        z-index: 1; /* Default z-index */
+        font-family: "Inter", sans-serif;
+      }
+
+      .marker-wrapper.active {
+        z-index: 10; /* Higher z-index when card is shown */
+      }
+
+      .marker-label {
+        background-color: white;
+        color: black;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 14px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        position: relative;
+      }
+
+      .marker-label.default {
+        background-color: white;
+        color: black;
+      }
+
+      .marker-label.active {
+        background-color: #2e86c1;
+        color: white;
+      }
+
+      .info-card {
+        position: absolute;
+        left: calc(100% + 10px); /* right of the marker */
+        top: 50%;
+        transform: translateY(-50%);
+        width: 260px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        display: none;
+        z-index: 2;
+      }
+
+      .info-card::before {
+        content: "";
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: 10px solid white;
+        filter: drop-shadow(-2px 2px 2px rgba(0, 0, 0, 0.1));
+      }
+
+      .info-card img {
+        width: 100%;
+        height: auto;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+
+      .info-card .content {
+        padding: 10px;
+      }
+
+      .info-card .content h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+
+      .info-card .content p {
+        margin: 4px 0;
+        font-size: 14px;
+      }
+
+      .info-card .close-btn {
+        color: #999;
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 24px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 4px 8px;
+        border-radius: 14px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const map = new maplibregl.Map({
+          container: "map",
+          style:
+            "https://api.maptiler.com/maps/dataviz/style.json?key=8Mk5zWnHAHciV9knLBLe",
+          center: [120.98941, 14.58699],
+          zoom: 13,
+        });
+
+        const properties = [
+          {
+            coordinates: { lng: 120.98941, lat: 14.58699 },
+            price: "1,205",
+            title: "2 Bedroom Modern Condo Unit",
+            description: "2BR, Fully Furnished, City View",
+            image:
+              "https://hudsoncondos.com/wp-content/uploads/2024/02/what-is-a-condo-1024x683.jpg",
+          },
+          {
+            coordinates: { lng: 120.985, lat: 14.584 },
+            price: "980",
+            title: "Studio Apartment",
+            description: "1BR, Semi-Furnished, Minimalist Style",
+            image:
+              "https://images.squarespace-cdn.com/content/v1/534c8a1fe4b0259491342174/84573bb5-5512-4176-b28a-ef520eb35ba6/1001-203+Catherine+Street-18.jpg",
+          },
+          {
+            coordinates: { lng: 120.9969886, lat: 14.5896012 },
+            price: "5,000",
+            title: "Studio Type Apartment",
+            description: "Studio Unit, Bare, Back of the Mall",
+            image:
+              "https://images.squarespace-cdn.com/content/v1/534c8a1fe4b0259491342174/84573bb5-5512-4176-b28a-ef520eb35ba6/1001-203+Catherine+Street-18.jpg",
+          },
+          {
+            coordinates: { lng: 121.0180038, lat: 14.5844276 },
+            price: "2,500",
+            title: "3 Bedroom Apartment",
+            description: "3BR, Semi-Furnished, Front View",
+            image:
+              "https://images.squarespace-cdn.com/content/v1/534c8a1fe4b0259491342174/84573bb5-5512-4176-b28a-ef520eb35ba6/1001-203+Catherine+Street-18.jpg",
+          },
+          {
+            coordinates: { lng: 121.0291217, lat: 14.6022833 },
+            price: "7,500",
+            title: "Penthouse Apartment",
+            description: "Penthouse, Fully Furnished, Facing Amenities",
+            image:
+              "https://images.squarespace-cdn.com/content/v1/534c8a1fe4b0259491342174/84573bb5-5512-4176-b28a-ef520eb35ba6/1001-203+Catherine+Street-18.jpg",
+          },
+        ];
+
+        properties.forEach((property) => {
+          const { lng, lat } = property.coordinates;
+
+          // Create wrapper
+          const markerWrapper = document.createElement("div");
+          markerWrapper.classList.add("marker-wrapper");
+
+          // Create label
+          const label = document.createElement("div");
+          label.className = "marker-label";
+          label.innerText = property.price;
+
+          // Initial color
+          label.classList.add("marker-label", "default");
+
+          // Hover effect
+          label.addEventListener("mouseenter", () => {
+            label.style.transform = "scale(1.1)";
+          });
+          label.addEventListener("mouseleave", () => {
+            label.style.transform = "scale(1)";
+          });
+
+          markerWrapper.appendChild(label);
+
+          // Create info card
+          const infoCard = document.createElement("div");
+          infoCard.className = "info-card";
+          infoCard.innerHTML = `
+        <div class="close-btn" style="
+        ">&times;</div>
+        <img src="${property.image}" alt="${property.title}" />
+        <div class="content">
+          <h3>${property.title}</h3>
+          <p>${property.description}</p>
+          <p><strong>${property.price}</strong></p>
+        </div>
+      `;
+          markerWrapper.appendChild(infoCard);
+
+          // Create marker
+          new maplibregl.Marker({ element: markerWrapper })
+            .setLngLat([lng, lat])
+            .addTo(map);
+
+          // Click toggle behavior
+          label.addEventListener("click", () => {
+            const isVisible = infoCard.style.display === "block";
+            const allCards = document.querySelectorAll(".info-card");
+            const allLabels = document.querySelectorAll(".marker-label");
+
+            const allWrappers = document.querySelectorAll(".marker-wrapper");
+
+            // Close all cards, reset labels and z-index
+            allCards.forEach((card) => (card.style.display = "none"));
+            allLabels.forEach((lbl) => {
+              lbl.classList.remove("active");
+              lbl.classList.add("default");
+            });
+            allWrappers.forEach((wrapper) =>
+              wrapper.classList.remove("active")
+            );
+
+            if (!isVisible) {
+              infoCard.style.display = "block";
+              label.classList.remove("default");
+              label.classList.add("active");
+              markerWrapper.classList.add("active"); // boosts z-index
+            }
+          });
+
+          // Close button
+          const closeBtn = infoCard.querySelector(".close-btn");
+          closeBtn.addEventListener("click", () => {
+            infoCard.style.display = "none";
+            label.classList.remove("active");
+            label.classList.add("default");
+            markerWrapper.classList.remove("active"); // << This resets its z-index
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
